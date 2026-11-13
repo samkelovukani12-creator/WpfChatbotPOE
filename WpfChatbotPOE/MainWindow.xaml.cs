@@ -100,7 +100,7 @@ namespace WpfChatbotPOE
                 Stretch = Stretch.Uniform
             };
 
-            string imagePath = isUser ? "user.jpg" : "chatbot.png";
+            string imagePath = isUser ? "user.png" : "chatbot.png";
 
             try
             {
