@@ -12,6 +12,7 @@
     <None Remove="ChatBot.png" />
     <None Remove="cybersecurity_final.png" />
     <None Remove="User.jpg" />
+    <None Remove="User.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -21,7 +22,6 @@
   <ItemGroup>
     <Resource Include="ChatBot.png" />
     <Resource Include="cybersecurity_final.png" />
-    <Resource Include="User.jpg" />
   </ItemGroup>
 
   <ItemGroup>
