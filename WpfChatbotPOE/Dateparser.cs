@@ -13,7 +13,7 @@ namespace WpfChatbotPOE
         /// "next Monday", "25 December", "14/11/2026") inside a sentence.
         /// Part of the NLP simulation (Task 3).
         /// </summary>
-        public static class DateParser
+        public static class Dateparser
         {
             private const RegexOptions Opts = RegexOptions.IgnoreCase | RegexOptions.CultureInvariant;
 

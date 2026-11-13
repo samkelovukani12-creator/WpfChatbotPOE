@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 namespace WpfChatbotPOE
 {
     
+    
         public enum ActivityCategory
         {
             Task,
@@ -93,5 +94,6 @@ namespace WpfChatbotPOE
             }
         }
     }
+
 
 

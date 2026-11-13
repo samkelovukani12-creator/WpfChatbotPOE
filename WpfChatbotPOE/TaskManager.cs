@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using static WpfChatbotPOE.DateParser;
+using static WpfChatbotPOE.Dateparser;
 
 namespace WpfChatbotPOE
 {
@@ -51,7 +51,7 @@ namespace WpfChatbotPOE
 
             log.Add(ActivityCategory.Reminder,
                 "Reminder set for '" + task.Title + "' - due " +
-                DateParser.Describe(date, DateTime.Now) + ".");
+                Dateparser.Describe(date, DateTime.Now) + ".");
         }
 
         // "Remind me to ..." - re-uses a matching open task or creates a new one
@@ -135,7 +135,7 @@ namespace WpfChatbotPOE
                 string status = task.IsCompleted ? "[x]" : "[ ]";
 
                 string reminder = task.ReminderDate.HasValue
-                    ? "reminder: " + DateParser.Describe(task.ReminderDate.Value, DateTime.Now)
+                    ? "reminder: " + Dateparser.Describe(task.ReminderDate.Value, DateTime.Now)
                     : "no reminder";
 
                 sb.AppendLine(task.Id + ". " + status + " " + task.Title + " (" + reminder + ")");

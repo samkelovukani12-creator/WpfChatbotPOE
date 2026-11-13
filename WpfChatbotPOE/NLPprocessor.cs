@@ -7,8 +7,7 @@ using System.Threading.Tasks;
 
 namespace WpfChatbotPOE
 {
-    public class NLPprocessor
-    {
+    
         /// <summary>
         /// What the user is trying to do, worked out from their sentence.
         /// </summary>
@@ -183,7 +182,7 @@ namespace WpfChatbotPOE
                     DateTime date;
                     string remaining;
 
-                    if (DateParser.TryExtract(text, now, out date, out remaining))
+                    if (Dateparser.TryExtract(text, now, out date, out remaining))
                     {
                         result.Date = date;
                     }
@@ -296,5 +295,5 @@ namespace WpfChatbotPOE
             }
         }
     }
-}
+
 
