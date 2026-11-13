@@ -1,7 +1,8 @@
 ﻿using System.Text;
 using System.Media;
-using System.Windows;
+using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
@@ -10,7 +11,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using System.Collections.Generic;
+
 
 namespace WpfChatbotPOE
 {
@@ -22,27 +23,6 @@ namespace WpfChatbotPOE
     {
         private string name = "";
         private readonly Random random = new Random();
-
-
-        private readonly string[,] TipsDatabase = new string[3, 3]
-        {
-            {
-                "Use a password manager so you don't have to remember every password.",
-                "Never reuse the same password on different accounts.",
-                "Change your password immediately if a service reports a breach."
-            },
-            {
-                "Check the sender's email address before clicking any link.",
-                "Banks and companies will never ask for your password by email.",
-                "Hover over links to see where they really lead before you click."
-            },
-            {
-                "Only download software from official websites and app stores.",
-                "Keep your antivirus and operating system updated.",
-                "Back up important files regularly in case of ransomware."
-            }
-        };
-
 
         // Tracks whether the user is currently playing the quiz
         private bool isQuizActive = false;
@@ -194,6 +174,26 @@ namespace WpfChatbotPOE
 };
 
 
+        private readonly string[,] TipsDatabase = new string[3, 3]
+        {
+            {
+                "Use a password manager so you don't have to remember every password.",
+                "Never reuse the same password on different accounts.",
+                "Change your password immediately if a service reports a breach."
+            },
+            {
+                "Check the sender's email address before clicking any link.",
+                "Banks and companies will never ask for your password by email.",
+                "Hover over links to see where they really lead before you click."
+            },
+            {
+                "Only download software from official websites and app stores.",
+                "Keep your antivirus and operating system updated.",
+                "Back up important files regularly in case of ransomware."
+            }
+        };
+
+
         public MainWindow()
         {
             InitializeComponent();
@@ -230,42 +230,71 @@ namespace WpfChatbotPOE
         {
             string userMessage = txtInput.Text.Trim();
 
-            // Input validation
             if (string.IsNullOrWhiteSpace(userMessage))
             {
                 AddMessage("Please enter a question or message.", false);
                 return;
             }
 
-            // Display the user's message
             AddMessage(userMessage, true);
 
-            // Get the normal chatbot response
-            string botResponse = GetBotResponse(userMessage);
+            string botResponse;
 
-            // Detect the user's sentiment
-            string sentimentResponse = DetectSentiment(userMessage);
-
-            // Combine the sentiment response with the normal response
-            if (!string.IsNullOrEmpty(sentimentResponse))
+            // Exit the quiz
+            if (isQuizActive &&
+                userMessage.Equals("quit quiz",
+                StringComparison.OrdinalIgnoreCase))
             {
-                botResponse = sentimentResponse +
-                              Environment.NewLine +
-                              Environment.NewLine +
-                              botResponse +
-                              Environment.NewLine +
-                              Environment.NewLine +
-                              "Here is an additional safety tip:" +
-                              Environment.NewLine +
-                              GetRelevantTip(userMessage);
+                isQuizActive = false;
+
+                botResponse = "You have exited the quiz. Your final score was " +
+                              quizScore + "/" + quizQuestions.Count +
+                              ". Type 'quiz' to play again.";
             }
 
-            // Display the chatbot's response
+            // Process quiz answers
+            else if (isQuizActive)
+            {
+                botResponse = ProcessQuizAnswer(userMessage);
+            }
+
+            // Start the quiz
+            else if (userMessage.Equals("quiz",
+                     StringComparison.OrdinalIgnoreCase) ||
+                     userMessage.Equals("start quiz",
+                     StringComparison.OrdinalIgnoreCase))
+            {
+                botResponse = StartQuiz();
+            }
+
+            // Normal chatbot conversation
+            else
+            {
+                botResponse = GetBotResponse(userMessage);
+
+                // Keep your sentiment detection here if already implemented
+                string sentiment = DetectSentiment(userMessage);
+
+                if (!string.IsNullOrEmpty(sentiment))
+                {
+                    botResponse = sentiment +
+                                  Environment.NewLine +
+                                  Environment.NewLine +
+                                  botResponse +
+                                  Environment.NewLine +
+                                  Environment.NewLine +
+                                  "Here is an additional safety tip:" +
+                                  Environment.NewLine +
+                                  GetRelevantTip(userMessage);
+                }
+            }
+
             AddMessage(botResponse, false);
 
             txtInput.Clear();
             txtInput.Focus();
         }
+
 
 
 
@@ -691,21 +720,109 @@ namespace WpfChatbotPOE
             return result;
         }
 
-
-
-        // Returns a random tip from the TipsDatabase
-        private string GiveRandomTip()
+        private string ProcessQuizAnswer(string userAnswer)
         {
-            int category = random.Next(0, 3);
-            int tip = random.Next(0, 3);
+            userAnswer = userAnswer.Trim().ToUpper();
 
-            string categoryName = category == 0 ? "Password Security"
-                                : category == 1 ? "Phishing"
-                                : "Malware";
+            // Get the current question
+            QuizQuestion question =
+                quizQuestions[currentQuestionIndex];
+
+            // Validate the user's answer
+            string[] validAnswers =
+                question.Options.Length == 2
+                ? new string[] { "A", "B" }
+                : new string[] { "A", "B", "C", "D" };
+
+            if (!validAnswers.Contains(userAnswer))
+            {
+                return "Please enter a valid answer: " +
+                       string.Join(", ", validAnswers) +
+                       ".";
+            }
+
+            string feedback;
+
+            // Check if the answer is correct
+            if (userAnswer == question.CorrectAnswer)
+            {
+                quizScore++;
+
+                feedback = Lines(
+                    "Correct! Well done!",
+                    question.Explanation
+                );
+            }
+            else
+            {
+                feedback = Lines(
+                    "Incorrect! Don't worry, this is a learning opportunity.",
+                    "The correct answer was " + question.CorrectAnswer + ".",
+                    question.Explanation
+                );
+            }
+
+            // Move to the next question
+            currentQuestionIndex++;
+
+            // Check whether the quiz has ended
+            if (currentQuestionIndex >= quizQuestions.Count)
+            {
+                isQuizActive = false;
+
+                return feedback +
+                       Environment.NewLine +
+                       Environment.NewLine +
+                       FinishQuiz();
+            }
+
+            // Display the next question
+            return feedback +
+                   Environment.NewLine +
+                   Environment.NewLine +
+                   "Your current score: " +
+                   quizScore + "/" + quizQuestions.Count +
+                   Environment.NewLine +
+                   Environment.NewLine +
+                   DisplayQuestion();
+        }
+
+
+        private string FinishQuiz()
+        {
+            string feedback;
+
+            if (quizScore >= 10)
+            {
+                feedback = "Excellent work! You're a cybersecurity pro!";
+            }
+            else if (quizScore >= 7)
+            {
+                feedback = "Great job! You have good cybersecurity knowledge.";
+            }
+            else if (quizScore >= 4)
+            {
+                feedback = "Good effort! Keep learning to improve your skills.";
+            }
+            else
+            {
+                feedback = "Keep learning to stay safe online! Practice makes perfect.";
+            }
 
             return Lines(
-                $"Here is a random {categoryName} tip:",
-                TipsDatabase[category, tip]);
+                "================================",
+                "CYBERSECURITY QUIZ COMPLETED!",
+                "================================",
+                "",
+                "Your final score: " +
+                quizScore + "/" + quizQuestions.Count,
+                "",
+                feedback,
+                "",
+                "Thank you for playing!",
+                "Type 'quiz' if you want to play again.",
+                "You can also ask me normal cybersecurity questions."
+            );
         }
 
 
@@ -733,6 +850,21 @@ namespace WpfChatbotPOE
 
             // General cybersecurity tip
             return GiveRandomTip();
+        }
+
+        // Returns a random tip from the TipsDatabase
+        private string GiveRandomTip()
+        {
+            int category = random.Next(0, 3);
+            int tip = random.Next(0, 3);
+
+            string categoryName = category == 0 ? "Password Security"
+                                : category == 1 ? "Phishing"
+                                : "Malware";
+
+            return Lines(
+                $"Here is a random {categoryName} tip:",
+                TipsDatabase[category, tip]);
         }
     }
 }
