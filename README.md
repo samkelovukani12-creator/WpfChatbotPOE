@@ -4,17 +4,6 @@ Instructions on how the chatbot works.
 A WPF (C#) desktop chatbot that teaches basic cybersecurity, manages tasks and reminders,
 runs a quiz, and keeps an activity log.
 
-## Requirements
-- Windows with Visual Studio 2022 (".NET desktop development" workload)
-- .NET 6 or later (WPF project)
-
-## Getting Started
-1. Clone the repository and open the `.sln` file in Visual Studio.
-2. Make sure these files are copied to the output folder (File > Properties > *Copy to Output Directory*):
-   - `Startup.wav`, `chatbot.png`, `user.jpg`, `cybersecurity_final.png`
-   (the app still runs without them, but without sound or pictures)
-3. Press **F5** to build and run.
-
 ## How to Use
 1. Type your name when the bot asks.
 2. Chat naturally, or click a quick-action button (Quiz, My tasks, Activity log, Safety tip, Help).
