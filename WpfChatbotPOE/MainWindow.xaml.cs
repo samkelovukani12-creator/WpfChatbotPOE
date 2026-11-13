@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using System.Media;
 using System.Windows;
+using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
@@ -9,6 +10,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Collections.Generic;
 
 namespace WpfChatbotPOE
 {
@@ -41,6 +43,157 @@ namespace WpfChatbotPOE
             }
         };
 
+
+        // Tracks whether the user is currently playing the quiz
+        private bool isQuizActive = false;
+
+        // Keeps track of the user's score
+        private int quizScore = 0;
+
+        // Keeps track of the current question
+        private int currentQuestionIndex = 0;
+
+        // Stores all the quiz questions
+        private readonly List<QuizQuestion> quizQuestions = new List<QuizQuestion>
+{
+    new QuizQuestion(
+        "What should you do if you receive an email asking for your password?",
+        new string[] {
+            "Reply with your password",
+            "Delete the email",
+            "Report the email as phishing",
+            "Ignore it"
+        },
+        "C",
+        "Reporting phishing emails helps prevent scams."
+    ),
+
+    new QuizQuestion(
+        "What is the recommended minimum length for a strong password?",
+        new string[] {
+            "4 characters",
+            "6 characters",
+            "8 characters",
+            "At least 12 characters"
+        },
+        "D",
+        "Longer passwords are generally harder for attackers to guess."
+    ),
+
+    new QuizQuestion(
+        "True or False: You should use the same password for all your accounts.",
+        new string[] {
+            "True",
+            "False"
+        },
+        "B",
+        "You should use unique passwords to prevent one compromised account from exposing others."
+    ),
+
+    new QuizQuestion(
+        "What is phishing?",
+        new string[] {
+            "A computer game",
+            "An attempt to steal information using fake messages",
+            "A type of antivirus",
+            "A method of backing up files"
+        },
+        "B",
+        "Phishing uses deceptive messages to trick people into revealing sensitive information."
+    ),
+
+    new QuizQuestion(
+        "What should you do before clicking an unfamiliar link?",
+        new string[] {
+            "Click it immediately",
+            "Share it with friends",
+            "Check where the link leads",
+            "Enter your password"
+        },
+        "C",
+        "Always check links carefully before opening them."
+    ),
+
+    new QuizQuestion(
+        "True or False: Antivirus software can help protect your computer against malware.",
+        new string[] {
+            "True",
+            "False"
+        },
+        "A",
+        "Antivirus software can detect and block many types of malicious software."
+    ),
+
+    new QuizQuestion(
+        "What does 2FA stand for?",
+        new string[] {
+            "Two-Factor Authentication",
+            "Two File Applications",
+            "Two Firewall Access",
+            "Two-Folder Authentication"
+        },
+        "A",
+        "Two-factor authentication adds another layer of security to your accounts."
+    ),
+
+    new QuizQuestion(
+        "What is social engineering?",
+        new string[] {
+            "Building social media websites",
+            "Manipulating people into revealing confidential information",
+            "Installing computer software",
+            "Creating strong passwords"
+        },
+        "B",
+        "Social engineering tricks people into sharing information or performing unsafe actions."
+    ),
+
+    new QuizQuestion(
+        "True or False: Public Wi-Fi networks are always safe for online banking.",
+        new string[] {
+            "True",
+            "False"
+        },
+        "B",
+        "Public Wi-Fi can be insecure. Avoid accessing sensitive accounts on untrusted networks."
+    ),
+
+    new QuizQuestion(
+        "Why should you regularly update your operating system?",
+        new string[] {
+            "To delete your files",
+            "To make passwords shorter",
+            "To fix security vulnerabilities",
+            "To disable antivirus software"
+        },
+        "C",
+        "Software updates often contain important security patches."
+    ),
+
+    new QuizQuestion(
+        "What should you do if someone asks you for your banking OTP?",
+        new string[] {
+            "Share it immediately",
+            "Post it online",
+            "Never share it with anyone",
+            "Send it through email"
+        },
+        "C",
+        "Never share your one-time PIN or verification code. Criminals can use it to access your accounts."
+    ),
+
+    new QuizQuestion(
+        "True or False: Regularly backing up important files helps protect against data loss.",
+        new string[] {
+            "True",
+            "False"
+        },
+        "A",
+        "Backups help you recover important information if your device is damaged or affected by ransomware."
+    )
+};
+
+
         public MainWindow()
         {
             InitializeComponent();
@@ -49,6 +202,27 @@ namespace WpfChatbotPOE
 
             AddMessage("Hi! Welcome to Cyber Chat. What's your name?", false);
             txtInput.Focus();
+        }
+
+
+        private class QuizQuestion
+        {
+            public string Question { get; set; }
+            public string[] Options { get; set; }
+            public string CorrectAnswer { get; set; }
+            public string Explanation { get; set; }
+
+            public QuizQuestion(
+                string question,
+                string[] options,
+                string correctAnswer,
+                string explanation)
+            {
+                Question = question;
+                Options = options;
+                CorrectAnswer = correctAnswer;
+                Explanation = explanation;
+            }
         }
 
 
@@ -93,7 +267,7 @@ namespace WpfChatbotPOE
             txtInput.Focus();
         }
 
-        
+
 
         private void txtInput_KeyDown(object sender, KeyEventArgs e)
         {
@@ -464,6 +638,61 @@ namespace WpfChatbotPOE
         }
 
 
+        private string StartQuiz()
+        {
+            isQuizActive = true;
+
+            // Reset the quiz
+            quizScore = 0;
+            currentQuestionIndex = 0;
+
+            return Lines(
+                "Welcome to the Cybersecurity Mini-Game!",
+                "",
+                "Test your cybersecurity knowledge!",
+                "There are " + quizQuestions.Count + " questions.",
+                "Some questions are multiple-choice and others are True/False.",
+                "",
+                "Type A, B, C or D to submit your answer.",
+                "For True/False questions, type A for True or B for False.",
+                "You can type 'quit quiz' at any time to exit.",
+                "",
+                DisplayQuestion()
+            );
+        }
+
+
+        private string DisplayQuestion()
+        {
+            QuizQuestion question =
+                quizQuestions[currentQuestionIndex];
+
+            string result = "Question " +
+                            (currentQuestionIndex + 1) +
+                            " of " + quizQuestions.Count +
+                            Environment.NewLine +
+                            Environment.NewLine +
+                            question.Question +
+                            Environment.NewLine;
+
+            string[] letters = { "A", "B", "C", "D" };
+
+            for (int i = 0; i < question.Options.Length; i++)
+            {
+                result += Environment.NewLine +
+                          letters[i] + ") " +
+                          question.Options[i];
+            }
+
+            result += Environment.NewLine +
+                      Environment.NewLine +
+                      "Enter your answer:";
+
+            return result;
+        }
+
+
+
         // Returns a random tip from the TipsDatabase
         private string GiveRandomTip()
         {
@@ -505,7 +734,9 @@ namespace WpfChatbotPOE
             // General cybersecurity tip
             return GiveRandomTip();
         }
-
-
     }
 }
+
+        
+
+        
